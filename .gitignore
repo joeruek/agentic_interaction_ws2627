@@ -8,3 +8,10 @@ wheels/
 
 # Virtual environments
 .venv
+
+# secrets and run artifacts
+.env
+logs/
+
+# temporary files
+temp/
