@@ -1,19 +1,16 @@
 [project]
 name = "agentic-interaction-ws2627"
 version = "0.1.0"
-description = "Add your description here"
+description = "Tool-calling agent for the Agentic Interaction exercises (Ulm University, WS 2026/27)"
 readme = "README.md"
 authors = [
     { name = "Alperen Akyol" }
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "groq>=1.7.0",
+    "openai>=3.45.0",
+    "python-dotenv>=1.2.4",
 ]
 
-[project.scripts]
-agentic-interaction-ws2627 = "agentic_interaction_ws2627:main"
-
-[build-system]
-requires = ["uv_build>=0.13.6,<0.14.0"]
-build-backend = "uv_build"
+[tool.uv]
+package = false
