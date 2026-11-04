@@ -4,9 +4,10 @@ import json
 import re
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Any, Callable
+from typing import Any
 
 from .config import Config
 
@@ -42,7 +43,11 @@ def get_calendar_day(config: Config, arguments: dict[str, Any]) -> ToolOutcome:
     except urllib.error.HTTPError as err:
         if err.code == 404:
             return ToolOutcome(
-                content={"date": day, "events": [], "note": "no calendar data for this date"},
+                content={
+                    "date": day,
+                    "events": [],
+                    "note": "no calendar data for this date",
+                },
                 status="not_found",
                 summary={"http_status": 404, "events": 0},
                 message=f"No calendar data for {day}",

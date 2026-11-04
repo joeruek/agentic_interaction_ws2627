@@ -28,7 +28,9 @@ def load_config() -> Config:
     load_dotenv(REPO_ROOT / ".env", override=False)
     missing = [name for name in REQUIRED if not os.environ.get(name)]
     if missing:
-        raise ConfigError(f"missing configuration: {', '.join(missing)} (set in environment or .env)")
+        raise ConfigError(
+            f"missing configuration: {', '.join(missing)} (set in environment or .env)"
+        )
     return Config(
         base_url=os.environ["OPENAI_BASE_URL"],
         model=os.environ["MODEL"],

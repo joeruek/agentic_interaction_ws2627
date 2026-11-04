@@ -22,15 +22,30 @@ def main() -> int:
 
     logger = RunLogger()
     started = time.monotonic()
-    logger.log("run_start", "Run started", question=question, model=config.model, base_url=config.base_url)
+    logger.log(
+        "run_start",
+        "Run started",
+        question=question,
+        model=config.model,
+        base_url=config.base_url,
+    )
     try:
         answer = run(config, question, logger)
         logger.log(
-            "run_end", "Run finished", status="success",
-            duration_ms=round((time.monotonic() - started) * 1000), answer_preview=answer[:200],
+            "run_end",
+            "Run finished",
+            status="success",
+            duration_ms=round((time.monotonic() - started) * 1000),
+            answer_preview=answer[:200],
         )
     except AgentError as err:
-        logger.log("run_end", "Run failed", status="failed", duration_ms=round((time.monotonic() - started) * 1000), detail=str(err))
+        logger.log(
+            "run_end",
+            "Run failed",
+            status="failed",
+            duration_ms=round((time.monotonic() - started) * 1000),
+            detail=str(err),
+        )
         print(f"error: {err}", file=sys.stderr)
         return 1
     finally:
