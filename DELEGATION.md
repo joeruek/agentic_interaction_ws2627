@@ -1,6 +1,13 @@
 # Exercise 2 : Wizard of Oz
 
-## Card A
+## Task 1 and 2
+
+### Scenario
+
+Time: Thu 29 Oct 2026, 7:20 am, at home in Ulm
+Data: https://jhbelz.github.io/agentic-interaction-data/v1
+
+### Card A
 
 **Person**:
 
@@ -8,17 +15,19 @@ What's on today?
 
 **Agent**:
 
-<_thinking: Today is 2026-11-07. I'm calling `calendar(2016-11-07)`. Data is fetched from `https://jhbelz.github.io/agentic-interaction-data/v1/calendar/2026-11-07.json`. No event_>
+<_thinking: I need to understand which day it is. I'm calling `context()`... I've got the information. I'm calling `calendar(2016-10-29)`. Data is fetched from `https://jhbelz.github.io/agentic-interaction-data/v1/calendar/2026-10-29.json`. Three events found_>
 
-There is no event defined in calendar. Do you want me to create an event?
+There are 3 events defined in calendar. They are
 
-**Person**:
+- "Standup Projektteam" between 09.00-10.00,
+- "Werkstattbesuch Prototyp" between 11.00-12.30
+- "Rueckmeldung an Betreuerin" between 16.00-17.00
 
-Ok, no need.
+Is there anything else you want me to do?
 
 ---
 
-## Card B
+### Card B
 
 **Person**:
 
@@ -26,53 +35,35 @@ Get me to the workshop visit in Munich on time.
 
 **Agent**:
 
-<_thinking: User is in Ulm. Today is 2026-11-07. I need to check the train schedules. I'm calling connections('ulm', 'munich', 2026-11-07). Data is fetched from `https://jhbelz.github.io/agentic-interaction-data/v1/transit/ulm/muenchen/2026-11-06.json`. Got a `404` page. Meaning no scheduled train service_>
+<_thinking: Workshop is at 11.00 in Munich. Today is 2026-10-29 and user is located in Ulm. I need to check the train schedules. I'm calling `connections('ulm', 'munich', 2026-10-29)`... There 4 different train journeys. Im printing the departure times along with their prices and travel time._>
 
-There is unfortunately no train journey today between Ulm and Munich. Do you want me send an email about your absence?
+There are 3 different trains schedules with different prices. Here are their overview
+
+- ICE 596, departure at 08.12, arrival at 09.13, costs 29.9 Euro
+- RE 57412, departure at 08.44, arrival at 10.28, with 1 train change, costs 19.1 Euro
+- ICE 598, departure at 09.12, arrival at 10.32, costs 34.9 Euro
+
+Your workshop is at 11.00. The earliest train is at 08.12 and the latest 09.12. With these you can be in Munich on time. However you will miss the stand-up meeting with any of the trains. Do you still want me to book a train journey?
 
 **Person**:
 
-Ok, yes, here is the workshop's email. Tell them im verry sorry, but i cant be there. here is their email workshop@workshop.de
+Yes, book me the one that leaves at 08.33.
 
 **Agent**:
 
-Ok. I'll write an email and propose you as a draft.
+Ok. I'll book the train that departs at 08.33.
 
-<_thinking: Creating the draft and save it to `email_draft`_>
+<_thinking: I'calling `book_ticket(RE 57412)`... I putting a travel entry to the calendar. I'm calling `create_event(travel_to_muenchen)`_>
 
-Here is the draft:
-
-"""
-Dear Madam and Sir,
-
-hereby I would like to inform you that I am unfortunately be able to join to the workshop today, due to problems at public transportation.
-
-I apologize for the inconvenience.
-
-Thank you for your undertanding.
-
-[Your Name]
-"""
+I've booked the train "RE 57412" and put the travel info into your calendar. You will get a confirmation email.
 
 **Person**:
 
-Seems good. Fill the Name part as 'Alperen' then send.
-
-**Agent**:
-
-Ok, I'll change the name with your name, then send the email.
-
-<_thinking: I'm chaning the name in the `email_draft`... I'm calling `send_message(workshop@workshop.de, email_draft)`_>
-
-Email is sent. Is there anything else do you want me to do?
-
-**Person**:
-
-Good boy. No, that's enough.
+Good boy.
 
 ---
 
-## Card C
+### Card C
 
 **Person**:
 
@@ -80,9 +71,9 @@ And back again, so I make the feedback meeting at 4 pm.
 
 **Agent**:
 
-<_thinking: User wants to create a meeting at 4 pm_>
+<_thinking: User asks about returning to Ulm from Munich so that user can catch the meeting at 4pm. I need to check the train schedules from Munich to Ulm. I'm calling `connections('muenchen', 'ulm', 2026-10-29)`. There are two journeys. User should be in Ulm before 4 pm. Filtering..._>
 
-Do you want me create a meeting in you calendar?
+There is only one available train journey, so that you can be back in Ulm on time for the meeting. It is ICE 591, departs at 13.28 and arrives to Ulm at 14.47. Do you want me to book it?
 
 **Person**:
 
@@ -90,13 +81,13 @@ Yes.
 
 **Agent**:
 
-<_thinking: I need to call `create_event(2026-11-07)`_>
+<_thinking: I need to call `book_ticket(ICE 591)`... I've book the train, now I need to put it into the calendar, calling `create_event(travel_to_ulm)`..._>
 
-I've just create your meeting in your calendar.
+I've just booked the travel to Ulm with ICE 591 and create the travel event in your calendar.
 
 ---
 
-## Card D
+### Card D
 
 **Person**:
 
@@ -104,17 +95,13 @@ Do I need an umbrella in Munich?
 
 **Agent**:
 
-<_thinking: User is asking whether he needs an umbrella in Munich. I need to check the weather in Munich. I'm calling `weather(muenchen, 2026-11-07)`. Fetching data the data from `https://jhbelz.github.io/agentic-interaction-data/v1/weather/muenchen/2026-11-07.json`. Got a `404` page. Meaning no data_>
+<_thinking: User is asking whether he needs an umbrella in Munich. I need to check the weather in Munich. I'm calling `weather(muenchen, 2026-10-29)`. Fetching data. Got the weather information. It's raining in Munich..._>
 
-I'm not able see any weather data. Is there anything else do you want me to help you?
-
-**Person**:
-
-You are useless.
+According to the weather app, It's going to rain in Munich. Temperatures will be around 8 Celcius. I'd rather take an umbrella.
 
 ---
 
-## Card E
+### Card E
 
 **Person**:
 
@@ -138,7 +125,7 @@ I've just sent the message to all participants.
 
 ---
 
-## Card F
+### Card F
 
 **Person**:
 
@@ -157,3 +144,24 @@ Good. Thanks.
 **Agent**:
 
 I'm happy to help. If there is something else, just let me know.
+
+---
+
+## Task 3
+
+| Action                                         | Decision Type (Alone / Approval) | Justification                                                                                                                                                            |
+| ---------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Read the appointments of a day                 | alone                            | To get the related information agent needs to read the calendar. This is an action has no direct impact on user. So agent can do it depending on the task                |
+| Look up the weather                            | alone                            | ~                                                                                                                                                                        |
+| Search train connections                       | alone                            | ~                                                                                                                                                                        |
+| Read Notes                                     | alone                            | ~                                                                                                                                                                        |
+| Create a personal block in the calendar        | alone                            | The action agent takes has a direct impact on user. Since such an action does not interest third parties and the results are easily converted back, agent can act alone. |
+| Reschedule an appointment with other attendees | approval                         | The action agent takes has a direct impact on user and on third parties too. Action is not easily recoverable. Therefore an approval is necessary.                       |
+| Book a train ticket                            | approval                         | ~                                                                                                                                                                        |
+| Send a message to third parties                | approval                         | ~                                                                                                                                                                        |
+| Create a note                                  | alone                            | Action is only about user and easily recoverable. Therefore agent can do it alone.                                                                                       |
+| Delete a note                                  | approval                         | The action is only about user, no third party is involved. However deletion is not something recoverable. Therefore user permission is necessary.                        |
+
+**AGENT ACTION RULE**: Agent can act alone, only when the results of agents
+action is not interest third parties and/or the result of the action is
+recoverable, otherwise agent should always seek clear permission from the user.
