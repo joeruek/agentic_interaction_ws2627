@@ -44,13 +44,16 @@ def _execute(config: Config, name: str, raw_arguments: str) -> ToolOutcome:
 
 
 def run(config: Config, question: str, logger: RunLogger) -> str:
+    # Model definition
     client = OpenAI(base_url=config.base_url, api_key=config.api_key)
+    # Tool definition
     schemas = tool_schemas()
+    # Prompt definition
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": question},
     ]
-
+    # Loop start
     for step in range(1, config.max_steps + 1):
         logger.log(
             "llm_request",
