@@ -1,26 +1,15 @@
-"""Tools the model can call: a schema for the model plus a Python implementation."""
-
 import json
 import re
 import urllib.error
 import urllib.request
-from collections.abc import Callable
-from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
 
-from .config import Config
+from custom_packages.model_config import Config
+from custom_packages.tool import ToolOutcome
 
 HTTP_TIMEOUT_S = 10
 ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-
-
-@dataclass
-class ToolOutcome:
-    content: dict[str, Any]  # what the model sees
-    status: str  # success | not_found | invalid_input | failed
-    summary: dict[str, Any] = field(default_factory=dict)  # what the log sees
-    message: str = ""
 
 
 def get_calendar_day(config: Config, arguments: dict[str, Any]) -> ToolOutcome:
@@ -73,41 +62,3 @@ def get_calendar_day(config: Config, arguments: dict[str, Any]) -> ToolOutcome:
         summary={"http_status": 200, "events": len(events)},
         message=f"{len(events)} event(s) on {day}",
     )
-
-
-@dataclass(frozen=True)
-class Tool:
-    schema: dict[str, Any]  # OpenAI function-calling description
-    run: Callable[[Config, dict[str, Any]], ToolOutcome]
-
-
-TOOLS: dict[str, Tool] = {
-    "get_calendar_day": Tool(
-        schema={
-            "type": "function",
-            "function": {
-                "name": "get_calendar_day",
-                "description": (
-                    "Return all appointments of one calendar day (title, start and end time, "
-                    "location). Use this whenever the user asks what is scheduled on a specific date."
-                ),
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "date": {
-                            "type": "string",
-                            "description": "The day to look up in ISO format YYYY-MM-DD, e.g. 2026-10-29. "
-                            "Convert dates like 29.10.2026 to this format.",
-                        }
-                    },
-                    "required": ["date"],
-                },
-            },
-        },
-        run=get_calendar_day,
-    )
-}
-
-
-def tool_schemas() -> list[dict[str, Any]]:
-    return [tool.schema for tool in TOOLS.values()]

@@ -2,55 +2,30 @@
 
 import json
 import time
+from os import path
 from typing import Any
 
 from openai import OpenAI, OpenAIError
 
-from .config import Config
-from .logging_jsonl import RunLogger
-from .tools import TOOLS, ToolOutcome, tool_schemas
+from custom_packages.jsonl_logger import RunLogger
+from custom_packages.model_config import Config
+from custom_packages.tool import ToolOutcome
 
-SYSTEM_PROMPT = (
-    "You are a calendar assistant. Answer questions about appointments using only the results of "
-    "the provided tools; never invent appointments. Call the calendar tool for every date the user "
-    "asks about. If a tool reports that no data exists for a date, say so. "
-    "Answer in the language of the question."
-)
+from .tools import TOOLS_SCHEMAS, get_tool_descriptions
 
 
 class AgentError(Exception):
     pass
 
 
-def _execute(config: Config, name: str, raw_arguments: str) -> ToolOutcome:
-    tool = TOOLS.get(name)
-    if tool is None:
-        return ToolOutcome(
-            {"error": f"unknown tool {name!r}"},
-            "invalid_input",
-            message=f"Unknown tool {name!r}",
-        )
-    try:
-        arguments = json.loads(raw_arguments or "{}")
-        if not isinstance(arguments, dict):
-            raise TypeError
-    except ValueError:
-        return ToolOutcome(
-            {"error": "arguments must be a JSON object"},
-            "invalid_input",
-            message="Unparsable tool arguments",
-        )
-    return tool.run(config, arguments)
-
-
 def run(config: Config, question: str, logger: RunLogger) -> str:
     # Model definition
     client = OpenAI(base_url=config.base_url, api_key=config.api_key)
     # Tool definition
-    schemas = tool_schemas()
+    schemas = get_tool_descriptions()
     # Prompt definition
     messages: list[dict[str, Any]] = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": _get_system_prompt()},
         {"role": "user", "content": question},
     ]
     # Loop start
@@ -150,3 +125,33 @@ def run(config: Config, question: str, logger: RunLogger) -> str:
         error_type="StepLimit",
     )
     raise AgentError(f"no final answer after {config.max_steps} steps")
+
+
+def _execute(config: Config, name: str, raw_arguments: str) -> ToolOutcome:
+    tool = TOOLS_SCHEMAS.get(name)
+    if tool is None:
+        return ToolOutcome(
+            {"error": f"unknown tool {name!r}"},
+            "invalid_input",
+            message=f"Unknown tool {name!r}",
+        )
+    try:
+        arguments = json.loads(raw_arguments or "{}")
+        if not isinstance(arguments, dict):
+            raise TypeError
+    except ValueError:
+        return ToolOutcome(
+            {"error": "arguments must be a JSON object"},
+            "invalid_input",
+            message="Unparsable tool arguments",
+        )
+    return tool.run(config, arguments)
+
+
+def _get_system_prompt() -> str:
+    sys_prompt = ""
+    current_path = path.dirname(path.abspath(__file__))
+    prompt_path = path.join(current_path, "SYSTEM_PROMPT.md")
+    with open(prompt_path, "r") as f:
+        sys_prompt = f.read()
+    return sys_prompt

@@ -3,9 +3,13 @@
 import sys
 import time
 
-from .config import ConfigError, load_config
-from .logging_jsonl import RunLogger
+from custom_packages.jsonl_logger import RunLogger
+from custom_packages.model_config import ConfigError
+
+from .config import REPO_ROOT, load_config
 from .loop import AgentError, run
+
+LOG_DIR = REPO_ROOT / "logs"
 
 
 def main() -> int:
@@ -20,7 +24,7 @@ def main() -> int:
         print(f"error: {err}", file=sys.stderr)
         return 2
 
-    logger = RunLogger()
+    logger = RunLogger(log_dir=LOG_DIR)
     started = time.monotonic()
     logger.log(
         "run_start",

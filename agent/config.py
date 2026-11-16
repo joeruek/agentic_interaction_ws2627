@@ -1,26 +1,14 @@
 """Configuration from the environment, with the repo's .env file as fallback."""
 
 import os
-from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
 
+from custom_packages.model_config import Config, ConfigError
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 REQUIRED = ("OPENAI_BASE_URL", "MODEL", "OPENAI_API_KEY", "DATA_BASE_URL")
-
-
-class ConfigError(Exception):
-    pass
-
-
-@dataclass(frozen=True)
-class Config:
-    base_url: str
-    model: str
-    api_key: str = ""
-    data_base_url: str = ""
-    max_steps: int = 5
 
 
 def load_config() -> Config:

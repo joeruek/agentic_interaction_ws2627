@@ -6,10 +6,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from .config import REPO_ROOT
-
-LOG_DIR = REPO_ROOT / "logs"
-
 # Outcome of a step -> log level
 LEVEL_BY_STATUS = {
     "success": "INFO",
@@ -20,7 +16,7 @@ LEVEL_BY_STATUS = {
 
 
 class RunLogger:
-    def __init__(self, log_dir: Path = LOG_DIR) -> None:
+    def __init__(self, log_dir: Path) -> None:
         self.run_id = uuid.uuid4().hex[:6]
         log_dir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
