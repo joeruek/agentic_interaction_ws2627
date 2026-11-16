@@ -139,13 +139,21 @@ def _execute(config: Config, name: str, raw_arguments: str) -> ToolOutcome:
         arguments = json.loads(raw_arguments or "{}")
         if not isinstance(arguments, dict):
             raise TypeError
-    except ValueError:
+    except (ValueError, TypeError):
         return ToolOutcome(
             {"error": "arguments must be a JSON object"},
             "invalid_input",
             message="Unparsable tool arguments",
         )
-    return tool.run(config, arguments)
+    try:
+        return tool.run(config, arguments)
+    except Exception as err:  # noqa
+        return ToolOutcome(
+            {"error": f"tool {name!r} failed unexpectedly: {type(err).__name__}"},
+            "failed",
+            summary={"error_type": type(err).__name__},
+            message=f"Tool {name!r} raised {type(err).__name__}: {err}",
+        )
 
 
 def _get_system_prompt() -> str:
