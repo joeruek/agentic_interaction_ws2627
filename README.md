@@ -62,13 +62,13 @@ that do not send the header show `unknown`. Both values are also logged in `run_
 All data is read via HTTP GET from `DATA_BASE_URL`. HTTP 404 means "no data" and is returned to the
 model as a `not_found` result, never as a crash.
 
-| Tool                | Reads (under `DATA_BASE_URL`)       | Used for                                                                     |
-| ------------------- | ----------------------------------- | ---------------------------------------------------------------------------- |
-| `get_calendar_day`  | `calendar/{date}.json`              | appointments of one day                                                      |
-| `get_weather`       | `weather/{city}/{date}.json`        | forecast for one city and day (temperature, condition, rain, wind)           |
-| `get_connections`   | `transit/{from}/{to}/{date}.json`   | train connections between two cities on one day                              |
-| `get_context`       | `context.json`                      | current date/time, home city, quiet hours (relative dates, unknown start)    |
-| `get_data_coverage` | `index.json`                        | which cities, routes and date range exist (`endpoints`, `version` left out) |
+| Tool                | Reads (under `DATA_BASE_URL`)     | Used for                                                                    |
+| ------------------- | --------------------------------- | --------------------------------------------------------------------------- |
+| `get_calendar_day`  | `calendar/{date}.json`            | appointments of one day                                                     |
+| `get_weather`       | `weather/{city}/{date}.json`      | forecast for one city and day (temperature, condition, rain, wind)          |
+| `get_connections`   | `transit/{from}/{to}/{date}.json` | train connections between two cities on one day                             |
+| `get_context`       | `context.json`                    | current date/time, home city, quiet hours (relative dates, unknown start)   |
+| `get_data_coverage` | `index.json`                      | which cities, routes and date range exist (`endpoints`, `version` left out) |
 
 Weather and connections exist only for some days; a city or day listed by `get_data_coverage` does
 not guarantee data for every day.
@@ -100,6 +100,7 @@ rejected as `invalid_input`.
    Reuse the helpers: `_fetch_json(url, label, not_found=...)` for the HTTP request and error
    handling, `_validate_date` for `YYYY-MM-DD` arguments, `_normalize_city` for city arguments.
    A tool without arguments still takes `arguments` (name it `_arguments`).
+
 2. Register it in `TOOLS_SCHEMAS` in `agent/tools/tool_schema.py` with a `Tool(description=..., run=...)`.
    The description is the OpenAI function-calling schema (name, purpose, JSON-schema parameters);
    its `name` must match the dictionary key. Use `DATE_DESCRIPTION` / `CITY_DESCRIPTION` for date and
@@ -124,12 +125,12 @@ Each run writes `logs/<UTC timestamp>-<run id>.jsonl` (not committed). One JSON 
 }
 ```
 
-`task` is the step (`run_start`, `llm_request`, `llm_response`, `tool_call`, `tool_result`, `error`,
-`run_end`); `options.status` is `success`, `not_found`, `invalid_input` or `failed` and determines
-`level` (`INFO`, `WARNING`, `ERROR`, `ERROR`; a line without status is `INFO`, an unknown status
-`WARNING`). The last line of a run is `run_end`, and its `options.status` shows whether the run ended
-with an answer (`success`) or an error (`failed`). Hitting the step limit is also logged as `error`
-with `error_type: StepLimit`.
+- `task` is the step (`run_start`, `llm_request`, `llm_response`, `tool_call`, `tool_result`, `error`,
+  `run_end`);
+- `options.status` is `success`, `not_found`, `invalid_input` or `failed`
+- `level` (`INFO`, `WARNING`, `ERROR`, `ERROR`; a line without status is `INFO`, an unknown status `WARNING`).
+- The last line of a run is `run_end`, and its `options.status` shows whether the run ended with an answer (`success`) or an error (`failed`).
+- Hitting the step limit is also logged as `error` with `error_type: StepLimit`.
 
 ## Dependencies
 
