@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+from openai.types.chat import ChatCompletionFunctionToolParam
+
 from custom_packages.model_config.classes import Config
 
 
@@ -17,5 +19,5 @@ class ToolOutcome:
 
 @dataclass(frozen=True)
 class Tool:
-    description: dict[str, Any]  # OpenAI function-calling description
+    description: ChatCompletionFunctionToolParam  # OpenAI function-calling description
     run: Callable[[Config, dict[str, Any]], ToolOutcome]

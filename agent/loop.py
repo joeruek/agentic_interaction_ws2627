@@ -3,15 +3,19 @@
 import json
 import time
 from os import path
-from typing import Any
 
 from openai import OpenAI, OpenAIError
+from openai.types.chat import (
+    ChatCompletionFunctionToolParam,
+    ChatCompletionMessageFunctionToolCall,
+    ChatCompletionMessageParam,
+)
 
 from custom_packages.jsonl_logger import RunLogger
 from custom_packages.model_config import Config
 from custom_packages.tool import ToolOutcome
 
-from .tools import TOOLS_SCHEMAS, get_tool_descriptions
+from .tools import get_schemas, get_tool_descriptions
 
 
 class AgentError(Exception):
@@ -22,9 +26,9 @@ def run(config: Config, question: str, logger: RunLogger) -> str:
     # Model definition
     client = OpenAI(base_url=config.base_url, api_key=config.api_key)
     # Tool definition
-    schemas = get_tool_descriptions()
+    schemas: list[ChatCompletionFunctionToolParam] = get_tool_descriptions()
     # Prompt definition
-    messages: list[dict[str, Any]] = [
+    messages: list[ChatCompletionMessageParam] = [
         {"role": "system", "content": _get_system_prompt()},
         {"role": "user", "content": question},
     ]
@@ -87,10 +91,22 @@ def run(config: Config, question: str, logger: RunLogger) -> str:
                         },
                     }
                     for c in message.tool_calls
+                    if isinstance(c, ChatCompletionMessageFunctionToolCall)
                 ],
             }
         )
         for call in message.tool_calls:
+            if not isinstance(call, ChatCompletionMessageFunctionToolCall):
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": call.id,
+                        "content": json.dumps({"error": "unsupported tool type"}),
+                    }
+                )
+                continue
+
+            # From now on Pylance knows that the calls are function kind call, not custom
             name = call.function.name
             try:
                 arguments = json.loads(call.function.arguments or "{}")
@@ -128,7 +144,7 @@ def run(config: Config, question: str, logger: RunLogger) -> str:
 
 
 def _execute(config: Config, name: str, raw_arguments: str) -> ToolOutcome:
-    tool = TOOLS_SCHEMAS.get(name)
+    tool = get_schemas().get(name)
     if tool is None:
         return ToolOutcome(
             {"error": f"unknown tool {name!r}"},
