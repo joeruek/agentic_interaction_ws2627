@@ -13,4 +13,4 @@ class Config:
     model: str
     api_key: str = ""
     data_base_url: str = ""
-    max_steps: int = 5
+    max_steps: int = 8

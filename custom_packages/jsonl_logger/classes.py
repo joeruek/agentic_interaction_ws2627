@@ -36,11 +36,17 @@ class RunLogger:
         """Write one line. `task` is the step name; `status` goes into options and sets the level."""
         if status is not None:
             options = {"status": status, **options}
+        if level is None:
+            # No status -> plain progress line; an unknown status is suspicious -> WARNING
+            level = (
+                LEVEL_BY_STATUS.get(status, "WARNING") if status is not None else "INFO"
+            )
+
         record = {
             "timestamp": datetime.now(UTC)
             .isoformat(timespec="milliseconds")
             .replace("+00:00", "Z"),
-            "level": level or LEVEL_BY_STATUS.get(status, "INFO"),
+            "level": level,
             "run_id": self.run_id,
             "task": task,
             "tool": tool,

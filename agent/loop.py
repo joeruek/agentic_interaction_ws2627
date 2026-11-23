@@ -4,7 +4,7 @@ import json
 import time
 from os import path
 
-from openai import OpenAI, OpenAIError
+from openai import APIStatusError, OpenAI, OpenAIError
 from openai.types.chat import (
     ChatCompletionFunctionToolParam,
     ChatCompletionMessageFunctionToolCall,
@@ -13,6 +13,7 @@ from openai.types.chat import (
 
 from custom_packages.jsonl_logger import RunLogger
 from custom_packages.model_config import Config
+from custom_packages.token_usage import TokenUsage
 from custom_packages.tool import ToolOutcome
 
 from .tools import get_schemas, get_tool_descriptions
@@ -22,7 +23,9 @@ class AgentError(Exception):
     pass
 
 
-def run(config: Config, question: str, logger: RunLogger) -> str:
+def run(
+    config: Config, question: str, logger: RunLogger, token_usage: TokenUsage
+) -> str:
     # Model definition
     client = OpenAI(base_url=config.base_url, api_key=config.api_key)
     # Tool definition
@@ -43,10 +46,15 @@ def run(config: Config, question: str, logger: RunLogger) -> str:
         )
         started = time.monotonic()
         try:
-            response = client.chat.completions.create(
+            # Raw response: same call, but also exposes the rate-limit headers
+            raw = client.chat.completions.with_raw_response.create(
                 model=config.model, messages=messages, tools=schemas
             )
+            response = raw.parse()
         except OpenAIError as err:
+            if isinstance(err, APIStatusError):
+                # e.g. HTTP 429: the headers still tell how much budget is left
+                token_usage.add(None, err.response.headers)
             logger.log(
                 "llm_response",
                 f"Model call failed: {err}",
@@ -58,6 +66,7 @@ def run(config: Config, question: str, logger: RunLogger) -> str:
         choice = response.choices[0]
         message = choice.message
         usage = response.usage
+        token_usage.add(usage, raw.headers)
         logger.log(
             "llm_response",
             "Model responded",
@@ -71,6 +80,7 @@ def run(config: Config, question: str, logger: RunLogger) -> str:
             }
             if usage
             else None,
+            tokens_remaining=token_usage.remaining,
             duration_ms=round((time.monotonic() - started) * 1000),
         )
 
