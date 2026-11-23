@@ -81,6 +81,7 @@ def run(config: Config, question: str, logger: RunLogger) -> str:
             {
                 "role": "assistant",
                 "content": message.content,
+                # Echo every call (function and custom) so each tool reply below has its request
                 "tool_calls": [
                     {
                         "id": c.id,
@@ -90,13 +91,26 @@ def run(config: Config, question: str, logger: RunLogger) -> str:
                             "arguments": c.function.arguments,
                         },
                     }
-                    for c in message.tool_calls
                     if isinstance(c, ChatCompletionMessageFunctionToolCall)
+                    else {
+                        "id": c.id,
+                        "type": "custom",
+                        "custom": {"name": c.custom.name, "input": c.custom.input},
+                    }
+                    for c in message.tool_calls
                 ],
             }
         )
         for call in message.tool_calls:
             if not isinstance(call, ChatCompletionMessageFunctionToolCall):
+                # Only function tools are registered; answer custom calls with an error
+                logger.log(
+                    "tool_result",
+                    f"Unsupported custom tool call {call.custom.name!r}",
+                    tool=call.custom.name,
+                    status="invalid_input",
+                    step=step,
+                )
                 messages.append(
                     {
                         "role": "tool",
